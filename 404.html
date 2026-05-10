@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
     <title>Fasahat's Hub | The BlackMarket</title>
     <meta name="description" content="Welcome to Fasahat's Hub. Drop in for the BlackMarket perks, custom slides, and premium unlocks." />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+    <link rel="manifest" href="manifest.json" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="FasahatHub" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -69,16 +69,17 @@
         window.dispatchEvent(new CustomEvent('firebaseAuthReady', { detail: user }));
       });
     </script>
-    <script type="module" crossorigin src="/assets/index-Be3LJ3MS.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-CSnnpddJ.css">
+    <base href="./">
+    <script type="module" crossorigin src="assets/index-Be3LJ3MS.js"></script>
+    <link rel="stylesheet" crossorigin href="assets/index-CSnnpddJ.css">
   </head>
   <body>
     <div id="root"></div>
     <script>
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js');
+        navigator.serviceWorker.register('./sw.js');
       }
     </script>
-    <script src="/inject.js" defer></script>
+    <script src="inject.js" defer></script>
   </body>
 </html>
