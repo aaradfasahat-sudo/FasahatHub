@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FasahatHub Proxy</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface2: #21262d;
+      --border: rgba(255,255,255,0.08);
+      --text: #e6edf3;
+      --text-muted: #7d8590;
+      --accent: #58a6ff;
+      --accent2: #3fb950;
+      --radius: 12px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* NAV */
+    nav {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .nav-logo {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: -0.5px;
+      text-decoration: none;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 4px;
+      margin-left: auto;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 13px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      transition: all 0.15s;
+    }
+
+    .nav-links a:hover { background: var(--surface2); color: var(--text); }
+    .nav-links a.active { background: rgba(88,166,255,0.12); color: var(--accent); }
+
+    /* MAIN */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px 80px;
+    }
+
+    /* HERO */
+    .hero { text-align: center; margin-bottom: 40px; }
+
+    .hero h1 {
+      font-size: clamp(36px, 6vw, 64px);
+      font-weight: 900;
+      letter-spacing: -2px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    .hero p {
+      color: var(--text-muted);
+      font-size: 15px;
+    }
+
+    /* SEARCH */
+    .search-wrap {
+      width: 100%;
+      max-width: 580px;
+      position: relative;
+    }
+
+    .search-bar {
+      width: 100%;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 56px 14px 50px;
+      font-size: 15px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .search-bar::placeholder { color: var(--text-muted); }
+
+    .search-bar:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(88,166,255,0.12);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .search-btn {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--accent);
+      border: none;
+      border-radius: 9px;
+      padding: 7px 16px;
+      color: #000;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .search-btn:hover { opacity: 0.85; }
+
+    /* SUGGESTIONS */
+    .suggestions {
+      width: 100%;
+      max-width: 580px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 14px 14px;
+      overflow: hidden;
+      display: none;
+    }
+
+    .suggestions.show { display: block; }
+
+    .suggestion-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      cursor: pointer;
+      transition: background 0.1s;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .suggestion-item:hover { background: var(--surface2); color: var(--text); }
+
+    /* QUICK LINKS */
+    .quick-links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 32px;
+      max-width: 580px;
+    }
+
+    .quick-link {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 16px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.15s;
+      min-width: 76px;
+      text-decoration: none;
+    }
+
+    .quick-link:hover {
+      border-color: rgba(88,166,255,0.35);
+      background: var(--surface2);
+      transform: translateY(-2px);
+    }
+
+    .quick-link img { width: 28px; height: 28px; border-radius: 6px; object-fit: contain; }
+    .quick-link span { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+
+    /* APPS GRID */
+    .apps-section {
+      width: 100%;
+      max-width: 940px;
+      margin-top: 48px;
+    }
+
+    .apps-section h2 {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .apps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 10px;
+    }
+
+    .app-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 16px 10px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.15s;
+      text-decoration: none;
+    }
+
+    .app-card:hover {
+      border-color: rgba(88,166,255,0.3);
+      background: var(--surface2);
+      transform: translateY(-2px);
+    }
+
+    .app-card img {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      object-fit: contain;
+    }
+
+    .app-card .app-name {
+      font-size: 11px;
+      color: var(--text);
+      text-align: center;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      width: 100%;
+    }
+
+    .app-card .app-desc {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-align: center;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      width: 100%;
+    }
+
+    /* SETTINGS PANEL */
+    .settings-section {
+      width: 100%;
+      max-width: 580px;
+      margin-top: 48px;
+      display: none;
+    }
+
+    .settings-section.show { display: block; }
+
+    .settings-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+    }
+
+    .settings-card h3 {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: var(--text);
+    }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .setting-row:last-child { border-bottom: none; }
+
+    .setting-label { font-size: 13px; color: var(--text); }
+    .setting-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+    .setting-input {
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 12px;
+      color: var(--text);
+      font-size: 13px;
+      outline: none;
+      width: 200px;
+    }
+
+    .setting-input:focus { border-color: var(--accent); }
+
+    /* TOGGLE */
+    .toggle {
+      position: relative;
+      width: 40px;
+      height: 22px;
+      cursor: pointer;
+    }
+
+    .toggle input { opacity: 0; width: 0; height: 0; }
+
+    .slider {
+      position: absolute;
+      inset: 0;
+      background: var(--surface2);
+      border-radius: 22px;
+      transition: background 0.2s;
+      border: 1.5px solid var(--border);
+    }
+
+    .slider::before {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      left: 2px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--text-muted);
+      border-radius: 50%;
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    .toggle input:checked + .slider { background: rgba(88,166,255,0.2); border-color: var(--accent); }
+    .toggle input:checked + .slider::before { transform: translate(18px, -50%); background: var(--accent); }
+
+    /* PAGE TABS */
+    .page-tabs {
+      display: none;
+    }
+
+    /* FOOTER */
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 11px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+    }
+
+    /* PROXY IFRAME */
+    #proxy-frame {
+      display: none;
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+      z-index: 9999;
+      background: #000;
+    }
+
+    #proxy-frame.active { display: block; }
+
+    #close-proxy {
+      display: none;
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 10000;
+      background: rgba(0,0,0,0.7);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #close-proxy.active { display: flex; }
+
+    @media (max-width: 600px) {
+      .apps-grid { grid-template-columns: repeat(3, 1fr); }
+      .nav-links a span { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <a class="nav-logo" href="#" onclick="showPage('home')">FasahatHub</a>
+    <div class="nav-links">
+      <a href="#" class="active" id="nav-home" onclick="showPage('home')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;margin-right:4px;vertical-align:-2px;"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Home
+      </a>
+      <a href="#" id="nav-apps" onclick="showPage('apps')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;margin-right:4px;vertical-align:-2px;"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Apps
+      </a>
+      <a href="#" id="nav-settings" onclick="showPage('settings')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline;margin-right:4px;vertical-align:-2px;"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 1 0 4.93 19.07"/></svg>
+        Settings
+      </a>
+    </div>
+  </nav>
+
+  <main id="page-home">
+    <div class="hero">
+      <h1>FasahatHub</h1>
+      <p>Search the web freely — fast, clean, unblocked</p>
+    </div>
+
+    <div class="search-wrap">
+      <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input class="search-bar" id="search-input" type="text" placeholder="Search Google or enter URL" autocomplete="off" />
+      <button class="search-btn" onclick="doSearch()">Go</button>
+    </div>
+    <div class="suggestions" id="suggestions"></div>
+
+    <div class="quick-links" id="quick-links-home"></div>
+  </main>
+
+  <main id="page-apps" style="display:none; padding-top: 24px; justify-content: flex-start;">
+    <div class="apps-section">
+      <h2>All Apps</h2>
+      <div style="margin-bottom:16px;">
+        <input id="apps-search" type="text" placeholder="Search apps..." class="search-bar" style="max-width:340px;padding:10px 16px;" oninput="filterApps(this.value)" />
+      </div>
+      <div class="apps-grid" id="apps-grid"></div>
+    </div>
+  </main>
+
+  <main id="page-settings" style="display:none;">
+    <div class="settings-section show">
+      <div class="settings-card">
+        <h3>Search Engine</h3>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Default Engine</div>
+            <div class="setting-desc">Choose your preferred search engine</div>
+          </div>
+          <select class="setting-input" id="engine-select" onchange="saveSetting('engine', this.value)">
+            <option value="google">Google</option>
+            <option value="bing">Bing</option>
+            <option value="duckduckgo">DuckDuckGo</option>
+            <option value="brave">Brave</option>
+            <option value="yahoo">Yahoo</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="settings-card" style="margin-top:16px;">
+        <h3>Tab Cloaking</h3>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Custom Tab Title</div>
+            <div class="setting-desc">Changes the browser tab title</div>
+          </div>
+          <input class="setting-input" id="cloak-title" placeholder="e.g. Google Docs" oninput="saveSetting('cloakTitle', this.value)" />
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Custom Tab Icon URL</div>
+            <div class="setting-desc">URL to a favicon image</div>
+          </div>
+          <input class="setting-input" id="cloak-icon" placeholder="https://..." oninput="saveSetting('cloakIcon', this.value)" />
+        </div>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Enable Cloaking</div>
+            <div class="setting-desc">Apply tab cloak</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="cloak-toggle" onchange="saveSetting('cloakEnabled', this.checked); applyCloak();" />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="settings-card" style="margin-top:16px;">
+        <h3>Proxy Settings</h3>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Open in About:Blank</div>
+            <div class="setting-desc">Opens proxy in a disguised tab</div>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="ab-toggle" onchange="saveSetting('aboutBlank', this.checked)" />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="settings-card" style="margin-top:16px;">
+        <h3>Appearance</h3>
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">Theme</div>
+            <div class="setting-desc">Color scheme preference</div>
+          </div>
+          <select class="setting-input" id="theme-select" onchange="applyTheme(this.value)">
+            <option value="dark">Dark</option>
+            <option value="darker">Darker</option>
+            <option value="light">Light</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <iframe id="proxy-frame" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-downloads" allow="autoplay; fullscreen; pointer-lock; gamepad"></iframe>
+  <button id="close-proxy" onclick="closeProxy()" title="Close">&times;</button>
+
+  <footer>FasahatHub &mdash; Open, fast, unrestricted browsing</footer>
+
+<script>
+(function() {
+  'use strict';
+
+  const ENGINES = {
+    google: { url: 'https://www.google.com/search?q=', suggest: 'https://suggestqueries.google.com/complete/search?client=firefox&q=' },
+    bing: { url: 'https://www.bing.com/search?q=', suggest: null },
+    duckduckgo: { url: 'https://duckduckgo.com/?q=', suggest: null },
+    brave: { url: 'https://search.brave.com/search?q=', suggest: null },
+    yahoo: { url: 'https://search.yahoo.com/search?p=', suggest: null },
+  };
+
+  const QUICK_LINKS_DEFAULT = [
+    { name: 'Google', url: 'https://google.com', icon: 'https://www.google.com/favicon.ico' },
+    { name: 'YouTube', url: 'https://youtube.com', icon: 'https://www.youtube.com/favicon.ico' },
+    { name: 'GitHub', url: 'https://github.com', icon: 'https://github.com/favicon.ico' },
+    { name: 'Reddit', url: 'https://reddit.com', icon: 'https://www.reddit.com/favicon.ico' },
+  ];
+
+  const APPS = [
+    { name: 'Google', desc: 'Search', icon: 'https://www.google.com/favicon.ico', url: 'https://google.com' },
+    { name: 'YouTube', desc: 'Video', icon: 'https://www.youtube.com/favicon.ico', url: 'https://youtube.com' },
+    { name: 'Gmail', desc: 'Email', icon: 'https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico', url: 'https://mail.google.com' },
+    { name: 'Google Drive', desc: 'Storage', icon: 'https://ssl.gstatic.com/docs/doclist/images/drive_2022q3_32dp.png', url: 'https://drive.google.com' },
+    { name: 'Docs', desc: 'Writing', icon: 'https://ssl.gstatic.com/docs/documents/images/kix-favicon7.ico', url: 'https://docs.google.com' },
+    { name: 'Sheets', desc: 'Spreadsheet', icon: 'https://ssl.gstatic.com/docs/spreadsheets/images/spreadsheets_2023q4.ico', url: 'https://sheets.google.com' },
+    { name: 'Reddit', desc: 'Community', icon: 'https://www.reddit.com/favicon.ico', url: 'https://reddit.com' },
+    { name: 'GitHub', desc: 'Code', icon: 'https://github.com/favicon.ico', url: 'https://github.com' },
+    { name: 'Twitter/X', desc: 'Social', icon: 'https://x.com/favicon.ico', url: 'https://x.com' },
+    { name: 'Instagram', desc: 'Photos', icon: 'https://www.instagram.com/favicon.ico', url: 'https://instagram.com' },
+    { name: 'Discord', desc: 'Chat', icon: 'https://discord.com/assets/favicon.ico', url: 'https://discord.com/app' },
+    { name: 'Spotify', desc: 'Music', icon: 'https://open.spotify.com/favicon.ico', url: 'https://open.spotify.com' },
+    { name: 'Netflix', desc: 'Streaming', icon: 'https://www.netflix.com/favicon.ico', url: 'https://netflix.com' },
+    { name: 'Twitch', desc: 'Live', icon: 'https://static.twitchsvc.net/assets/uploads/favicon.ico', url: 'https://twitch.tv' },
+    { name: 'Wikipedia', desc: 'Knowledge', icon: 'https://wikipedia.org/favicon.ico', url: 'https://wikipedia.org' },
+    { name: 'Itch.io', desc: 'Games', icon: 'https://itch.io/favicon.ico', url: 'https://itch.io' },
+    { name: 'CoolMath', desc: 'Games', icon: 'https://www.coolmathgames.com/favicon.ico', url: 'https://coolmathgames.com' },
+    { name: 'Scratch', desc: 'Code', icon: 'https://scratch.mit.edu/favicon.ico', url: 'https://scratch.mit.edu' },
+    { name: 'Kahoot', desc: 'Quiz', icon: 'https://kahoot.com/favicon.ico', url: 'https://kahoot.com' },
+    { name: 'Duolingo', desc: 'Learn', icon: 'https://duolingo.com/favicon.ico', url: 'https://duolingo.com' },
+  ];
+
+  function gs(k, d) { try { return JSON.parse(localStorage.getItem('fh_' + k)) ?? d; } catch { return d; } }
+  function ss(k, v) { localStorage.setItem('fh_' + k, JSON.stringify(v)); }
+
+  // Load settings
+  function loadSettings() {
+    const engine = gs('engine', 'google');
+    const cloakTitle = gs('cloakTitle', '');
+    const cloakIcon = gs('cloakIcon', '');
+    const cloakEnabled = gs('cloakEnabled', false);
+    const aboutBlank = gs('aboutBlank', false);
+
+    const engineEl = document.getElementById('engine-select');
+    if (engineEl) engineEl.value = engine;
+
+    const cloakTitleEl = document.getElementById('cloak-title');
+    if (cloakTitleEl) cloakTitleEl.value = cloakTitle;
+
+    const cloakIconEl = document.getElementById('cloak-icon');
+    if (cloakIconEl) cloakIconEl.value = cloakIcon;
+
+    const cloakToggle = document.getElementById('cloak-toggle');
+    if (cloakToggle) cloakToggle.checked = cloakEnabled;
+
+    const abToggle = document.getElementById('ab-toggle');
+    if (abToggle) abToggle.checked = aboutBlank;
+
+    if (cloakEnabled) applyCloak();
+  }
+
+  window.saveSetting = function(key, value) {
+    ss(key, value);
+  };
+
+  window.applyCloak = function() {
+    const enabled = gs('cloakEnabled', false);
+    if (enabled) {
+      const title = gs('cloakTitle', '');
+      const icon = gs('cloakIcon', '');
+      if (title) document.title = title;
+      if (icon) {
+        let link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+        link.rel = 'shortcut icon';
+        link.href = icon;
+        document.head.appendChild(link);
+      }
+    }
+  };
+
+  window.applyTheme = function(theme) {
+    ss('theme', theme);
+    const root = document.documentElement;
+    if (theme === 'darker') {
+      root.style.setProperty('--bg', '#060608');
+      root.style.setProperty('--surface', '#0d0d10');
+      root.style.setProperty('--surface2', '#141418');
+    } else if (theme === 'light') {
+      root.style.setProperty('--bg', '#f6f8fa');
+      root.style.setProperty('--surface', '#ffffff');
+      root.style.setProperty('--surface2', '#f0f2f5');
+      root.style.setProperty('--text', '#1c2128');
+      root.style.setProperty('--text-muted', '#636e7b');
+      root.style.setProperty('--border', 'rgba(0,0,0,0.1)');
+    } else {
+      root.style.setProperty('--bg', '#0d1117');
+      root.style.setProperty('--surface', '#161b22');
+      root.style.setProperty('--surface2', '#21262d');
+      root.style.setProperty('--text', '#e6edf3');
+      root.style.setProperty('--text-muted', '#7d8590');
+      root.style.setProperty('--border', 'rgba(255,255,255,0.08)');
+    }
+    const sel = document.getElementById('theme-select');
+    if (sel) sel.value = theme;
+  };
+
+  // Build quick links
+  function buildQuickLinks() {
+    const links = gs('quickLinks', QUICK_LINKS_DEFAULT);
+    const container = document.getElementById('quick-links-home');
+    if (!container) return;
+    container.innerHTML = links.map(l => `
+      <a class="quick-link" href="#" onclick="navigate('${escA(l.url)}');return false;">
+        <img src="${escA(l.icon)}" onerror="this.style.display='none';" alt="${escH(l.name)}" />
+        <span>${escH(l.name)}</span>
+      </a>
+    `).join('');
+  }
+
+  // Build apps grid
+  let _allApps = APPS;
+  function buildApps() {
+    const grid = document.getElementById('apps-grid');
+    if (!grid) return;
+    grid.innerHTML = _allApps.map(a => `
+      <a class="app-card" href="#" onclick="navigate('${escA(a.url)}');return false;">
+        <img src="${escA(a.icon)}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2240%22 height=%2240%22><rect width=%2240%22 height=%2240%22 rx=%228%22 fill=%22%2321262d%22/></svg>'" alt="${escH(a.name)}" />
+        <span class="app-name">${escH(a.name)}</span>
+        <span class="app-desc">${escH(a.desc)}</span>
+      </a>
+    `).join('');
+  }
+
+  window.filterApps = function(q) {
+    const filtered = q.trim() ? _allApps.filter(a => a.name.toLowerCase().includes(q.toLowerCase()) || a.desc.toLowerCase().includes(q.toLowerCase())) : _allApps;
+    const grid = document.getElementById('apps-grid');
+    if (!grid) return;
+    grid.innerHTML = filtered.map(a => `
+      <a class="app-card" href="#" onclick="navigate('${escA(a.url)}');return false;">
+        <img src="${escA(a.icon)}" onerror="this.style.display='none';" alt="${escH(a.name)}" />
+        <span class="app-name">${escH(a.name)}</span>
+        <span class="app-desc">${escH(a.desc)}</span>
+      </a>
+    `).join('');
+  };
+
+  // Suggestions (debounced)
+  let _sugTimer = null;
+  document.getElementById('search-input').addEventListener('input', function(e) {
+    clearTimeout(_sugTimer);
+    const q = e.target.value.trim();
+    if (!q) { hideSuggestions(); return; }
+    _sugTimer = setTimeout(() => fetchSuggestions(q), 280);
+  });
+
+  document.getElementById('search-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { doSearch(); hideSuggestions(); }
+  });
+
+  function hideSuggestions() {
+    const s = document.getElementById('suggestions');
+    if (s) { s.classList.remove('show'); s.innerHTML = ''; }
+    const bar = document.getElementById('search-input');
+    if (bar) bar.style.borderRadius = '14px';
+  }
+
+  function fetchSuggestions(q) {
+    const engine = gs('engine', 'google');
+    const conf = ENGINES[engine];
+    if (!conf || !conf.suggest) return hideSuggestions();
+    const url = conf.suggest + encodeURIComponent(q);
+    const s = document.createElement('script');
+    window._suggCb = function(data) {
+      const terms = Array.isArray(data) && Array.isArray(data[1]) ? data[1].slice(0, 5) : [];
+      if (!terms.length) { hideSuggestions(); return; }
+      const el = document.getElementById('suggestions');
+      if (!el) return;
+      el.innerHTML = terms.map(t => `
+        <div class="suggestion-item" onclick="selectSuggestion('${escA(t)}')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          ${escH(t)}
+        </div>
+      `).join('');
+      el.classList.add('show');
+      document.getElementById('search-input').style.borderRadius = '14px 14px 0 0';
+    };
+    s.src = url + '&callback=_suggCb';
+    s.onerror = () => hideSuggestions();
+    document.head.appendChild(s);
+    setTimeout(() => { try { document.head.removeChild(s); } catch {} }, 3000);
+  }
+
+  window.selectSuggestion = function(term) {
+    document.getElementById('search-input').value = term;
+    hideSuggestions();
+    doSearch();
+  };
+
+  window.doSearch = function() {
+    const input = document.getElementById('search-input');
+    const q = input.value.trim();
+    if (!q) return;
+    hideSuggestions();
+    navigate(q);
+  };
+
+  window.navigate = function(q) {
+    if (!q) return;
+    let url = q;
+    // If it looks like a URL
+    if (/^https?:\/\//i.test(q)) {
+      url = q;
+    } else if (/^[a-z0-9-]+\.[a-z]{2,}/i.test(q) && !q.includes(' ')) {
+      url = 'https://' + q;
+    } else {
+      const engine = gs('engine', 'google');
+      url = ENGINES[engine].url + encodeURIComponent(q);
+    }
+
+    const ab = gs('aboutBlank', false);
+    if (ab) {
+      openAboutBlank(url);
+    } else {
+      openProxy(url);
+    }
+  };
+
+  function openProxy(url) {
+    const frame = document.getElementById('proxy-frame');
+    const closeBtn = document.getElementById('close-proxy');
+    frame.src = '/px?url=' + encodeURIComponent(url);
+    frame.classList.add('active');
+    closeBtn.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function openAboutBlank(url) {
+    const pxUrl = '/px?url=' + encodeURIComponent(url);
+    const w = window.open('about:blank', '_blank');
+    if (!w) { openProxy(url); return; }
+    const d = w.document;
+    d.open();
+    d.write('<!DOCTYPE html><html><head><title>' + (gs('cloakTitle', 'Google Docs') || 'Google Docs') + '</title></head><body style="margin:0;overflow:hidden;"></body></html>');
+    d.close();
+    const iframe = d.createElement('iframe');
+    iframe.src = pxUrl;
+    iframe.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;border:none;';
+    iframe.setAttribute('allow', 'autoplay; fullscreen; pointer-lock; gamepad');
+    d.body.appendChild(iframe);
+  }
+
+  window.closeProxy = function() {
+    const frame = document.getElementById('proxy-frame');
+    const closeBtn = document.getElementById('close-proxy');
+    frame.src = 'about:blank';
+    frame.classList.remove('active');
+    closeBtn.classList.remove('active');
+    document.body.style.overflow = '';
+  };
+
+  // Page navigation
+  window.showPage = function(page) {
+    ['home', 'apps', 'settings'].forEach(p => {
+      const el = document.getElementById('page-' + p);
+      if (el) el.style.display = p === page ? (p === 'home' ? 'flex' : 'flex') : 'none';
+      const nav = document.getElementById('nav-' + p);
+      if (nav) nav.classList.toggle('active', p === page);
+    });
+    if (page === 'apps') buildApps();
+  };
+
+  // Escape helpers
+  function escH(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function escA(s) { return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+  // Init
+  loadSettings();
+  const savedTheme = gs('theme', 'dark');
+  applyTheme(savedTheme);
+  buildQuickLinks();
+
+  // Close proxy with Escape
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      const frame = document.getElementById('proxy-frame');
+      if (frame && frame.classList.contains('active')) closeProxy();
+    }
+  });
+
+  // Click outside suggestions to close
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.search-wrap') && !e.target.closest('.suggestions')) {
+      hideSuggestions();
+    }
+  });
+
+  // Auto-navigate from ?q= URL param (used by FasahatHub navbar proxy bar)
+  (function() {
+    const q = new URLSearchParams(location.search).get('q');
+    if (q) setTimeout(() => navigate(q), 400);
+  })();
+})();
+</script>
+</body>
+</html>
