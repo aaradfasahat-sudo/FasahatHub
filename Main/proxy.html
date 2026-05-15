@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FasahatHub — Proxy</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0e14;
+      --surface: #13141c;
+      --surface2: #1a1b26;
+      --border: rgba(255,255,255,0.07);
+      --accent: #e53935;
+      --accent2: #7c3aed;
+      --text: #e8e9f0;
+      --muted: #6b7280;
+      --radius: 14px;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+    }
+
+    /* ── IFRAME OVERLAY ── */
+    #proxy-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: #000;
+      flex-direction: column;
+    }
+    #proxy-overlay.active { display: flex; }
+
+    #proxy-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: #0d0e14ee;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      backdrop-filter: blur(8px);
+    }
+
+    #proxy-toolbar .toolbar-title {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--accent);
+      letter-spacing: 0.5px;
+      flex: 1;
+    }
+
+    .tb-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: background 0.15s, border-color 0.15s;
+      white-space: nowrap;
+    }
+    .tb-btn:hover { background: var(--surface); border-color: rgba(255,255,255,0.15); }
+    .tb-btn.danger { border-color: rgba(229,57,53,0.4); }
+    .tb-btn.danger:hover { background: rgba(229,57,53,0.15); border-color: var(--accent); }
+
+    #proxy-frame {
+      flex: 1;
+      width: 100%;
+      border: none;
+    }
+
+    /* ── HUB PAGE ── */
+    #hub {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    header {
+      padding: 28px 32px 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .back-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 8px;
+      padding: 7px 12px;
+      cursor: pointer;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.15s, border-color 0.15s;
+      text-decoration: none;
+    }
+    .back-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.15); }
+
+    .page-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.5px;
+    }
+    .page-title span { color: var(--accent); }
+
+    .subtitle {
+      font-size: 13px;
+      color: var(--muted);
+      margin-left: auto;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+      padding: 28px 32px 40px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.2s;
+      display: flex;
+      flex-direction: column;
+    }
+    .card:hover { border-color: rgba(255,255,255,0.14); transform: translateY(-2px); }
+
+    .card-preview {
+      height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 44px;
+      font-weight: 900;
+      letter-spacing: -2px;
+      position: relative;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    .card-preview::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0.12;
+      background-size: 30px 30px;
+      background-image:
+        linear-gradient(to right, rgba(255,255,255,0.08) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,0.08) 1px, transparent 1px);
+    }
+
+    .card-preview.theme-dark {
+      background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+      color: #58a6ff;
+    }
+    .card-preview.theme-cat {
+      background: linear-gradient(135deg, #1e1e2e 0%, #181825 100%);
+      color: #cba6f7;
+    }
+
+    .card-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      padding: 3px 8px;
+      border-radius: 99px;
+      text-transform: uppercase;
+    }
+    .theme-dark .card-badge { background: rgba(88,166,255,0.15); color: #58a6ff; border: 1px solid rgba(88,166,255,0.25); }
+    .theme-cat .card-badge { background: rgba(203,166,247,0.15); color: #cba6f7; border: 1px solid rgba(203,166,247,0.25); }
+
+    .card-body {
+      padding: 18px 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .card-name {
+      font-weight: 700;
+      font-size: 16px;
+      color: var(--text);
+    }
+
+    .card-desc {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .card-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+    }
+
+    .open-btn {
+      flex: 1;
+      background: var(--accent);
+      border: none;
+      color: #fff;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: opacity 0.15s, transform 0.1s;
+      letter-spacing: 0.2px;
+    }
+    .open-btn:hover { opacity: 0.88; transform: scale(0.98); }
+    .open-btn:active { transform: scale(0.95); }
+
+    .open-btn.cat { background: #7c3aed; }
+
+    .newtab-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      transition: color 0.15s;
+    }
+    .newtab-btn:hover { color: var(--text); }
+
+    @media (max-width: 600px) {
+      .cards { padding: 20px 16px 32px; }
+      header { padding: 20px 16px 0; }
+      .subtitle { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HUB -->
+<div id="hub">
+  <header>
+    <a class="back-btn" href="/" title="Back to FasahatHub">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      Back
+    </a>
+    <span class="page-title">Fasa<span>hat</span>Hub <span style="color:var(--muted);font-weight:400;font-size:16px">/ Proxy</span></span>
+    <span class="subtitle">Select a proxy to launch</span>
+  </header>
+
+  <div class="cards">
+
+    <div class="card">
+      <div class="card-preview theme-dark">
+        FH
+        <span class="card-badge">Dark</span>
+      </div>
+      <div class="card-body">
+        <div class="card-name">FasahatHub Proxy</div>
+        <div class="card-desc">Clean dark interface with multi-engine search, app shortcuts, settings and cloaking. Fast and reliable.</div>
+      </div>
+      <div class="card-footer">
+        <button class="open-btn" onclick="openProxy('/proxy1.html', 'FasahatHub Proxy')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+          Open
+        </button>
+        <button class="newtab-btn" title="Open in new tab" onclick="window.open('/proxy1.html','_blank')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-preview theme-cat">
+        FH
+        <span class="card-badge">Catppuccin</span>
+      </div>
+      <div class="card-body">
+        <div class="card-name">FasahatHub Proxy — Mocha</div>
+        <div class="card-desc">Catppuccin Mocha themed proxy with particle background, tabbed browsing, engine selector and cloaking.</div>
+      </div>
+      <div class="card-footer">
+        <button class="open-btn cat" onclick="openProxy('/proxy2.html', 'FasahatHub Proxy — Mocha')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+          Open
+        </button>
+        <button class="newtab-btn" title="Open in new tab" onclick="window.open('/proxy2.html','_blank')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- IFRAME OVERLAY -->
+<div id="proxy-overlay">
+  <div id="proxy-toolbar">
+    <span class="toolbar-title" id="proxy-label">FasahatHub Proxy</span>
+    <button class="tb-btn" onclick="reloadProxy()" title="Reload">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      Reload
+    </button>
+    <button class="tb-btn" onclick="goFullscreen()" title="Fullscreen">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+      Fullscreen
+    </button>
+    <button class="tb-btn danger" onclick="closeProxy()" title="Close">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      Close
+    </button>
+  </div>
+  <iframe
+    id="proxy-frame"
+    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-downloads"
+    allow="autoplay; fullscreen; pointer-lock; gamepad"
+  ></iframe>
+</div>
+
+<script>
+  const overlay = document.getElementById('proxy-overlay');
+  const frame   = document.getElementById('proxy-frame');
+  const label   = document.getElementById('proxy-label');
+
+  function openProxy(src, name) {
+    frame.src = src;
+    label.textContent = name;
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeProxy() {
+    overlay.classList.remove('active');
+    frame.src = 'about:blank';
+    document.body.style.overflow = '';
+  }
+
+  function reloadProxy() {
+    const src = frame.src;
+    frame.src = 'about:blank';
+    setTimeout(() => { frame.src = src; }, 80);
+  }
+
+  function goFullscreen() {
+    const el = frame;
+    if (el.requestFullscreen) el.requestFullscreen();
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    else if (el.mozRequestFullScreen) el.mozRequestFullScreen();
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && overlay.classList.contains('active')) closeProxy();
+  });
+</script>
+
+</body>
+</html>

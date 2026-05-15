@@ -1,0 +1,26 @@
+{
+  "name": "fasahathub",
+  "version": "2.0.0",
+  "description": "FasahatHub — entertainment hub with server-side web proxy",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "proxy",
+    "hub",
+    "entertainment"
+  ],
+  "author": "Fasahat",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "archiver": "^8.0.0"
+  }
+}

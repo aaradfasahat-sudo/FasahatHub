@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FasahatHub Proxy</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #1e1e2e;
+      --surface: #181825;
+      --surface2: #313244;
+      --overlay: #6c7086;
+      --text: #cdd6f4;
+      --subtext: #a6adc8;
+      --accent: #cba6f7;
+      --accent2: #89b4fa;
+      --green: #a6e3a1;
+      --red: #f38ba8;
+      --yellow: #f9e2af;
+      --radius: 16px;
+      --particle-color: rgba(203,166,247,0.25);
+    }
+
+    [data-theme="mocha"] {
+      --bg: #1e1e2e; --surface: #181825; --surface2: #313244;
+      --text: #cdd6f4; --accent: #cba6f7; --accent2: #89b4fa;
+    }
+    [data-theme="macchiato"] {
+      --bg: #24273a; --surface: #1e2030; --surface2: #363a4f;
+      --text: #cad3f5; --accent: #c6a0f6; --accent2: #8aadf4;
+    }
+    [data-theme="frappe"] {
+      --bg: #303446; --surface: #292c3c; --surface2: #414559;
+      --text: #c6d0f5; --accent: #ca9ee6; --accent2: #8caaee;
+    }
+    [data-theme="latte"] {
+      --bg: #eff1f5; --surface: #e6e9ef; --surface2: #ccd0da;
+      --text: #4c4f69; --overlay: #8c8fa1; --subtext: #5c5f77;
+      --accent: #8839ef; --accent2: #1e66f5;
+      --particle-color: rgba(136,57,239,0.18);
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* PARTICLES */
+    #particles-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* NAV */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 56px;
+      background: rgba(24,24,37,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(203,166,247,0.12);
+      display: flex;
+      align-items: center;
+      padding: 0 28px;
+      gap: 8px;
+      z-index: 200;
+    }
+
+    [data-theme="latte"] nav {
+      background: rgba(230,233,239,0.85);
+      border-bottom-color: rgba(136,57,239,0.15);
+    }
+
+    .nav-logo {
+      font-size: 17px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.5px;
+      text-decoration: none;
+      margin-right: 8px;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 4px;
+      flex: 1;
+    }
+
+    .nav-tab {
+      padding: 6px 16px;
+      border-radius: 8px;
+      border: none;
+      background: transparent;
+      color: var(--subtext);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .nav-tab:hover { background: rgba(203,166,247,0.1); color: var(--text); }
+    .nav-tab.active { background: rgba(203,166,247,0.18); color: var(--accent); }
+
+    .nav-right {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-left: auto;
+    }
+
+    .theme-btn {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      border: 1px solid rgba(203,166,247,0.2);
+      background: rgba(203,166,247,0.08);
+      color: var(--subtext);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      font-size: 14px;
+    }
+
+    .theme-btn:hover { background: rgba(203,166,247,0.16); color: var(--text); }
+
+    /* PAGES */
+    .page { display: none; min-height: 100vh; padding-top: 56px; }
+    .page.active { display: flex; flex-direction: column; }
+
+    /* HOME PAGE */
+    #page-home {
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .home-content {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 40px 24px;
+      max-width: 640px;
+      width: 100%;
+    }
+
+    .void-title {
+      font-size: clamp(52px, 10vw, 96px);
+      font-weight: 900;
+      letter-spacing: -3px;
+      line-height: 1;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 50%, var(--green) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: none;
+      user-select: none;
+    }
+
+    .void-subtitle {
+      font-size: 13px;
+      color: var(--subtext);
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 48px;
+    }
+
+    /* SEARCH BAR */
+    .search-wrap {
+      position: relative;
+      margin-bottom: 16px;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--overlay);
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      height: 56px;
+      background: rgba(49,50,68,0.6);
+      border: 1.5px solid rgba(203,166,247,0.2);
+      border-radius: 16px;
+      padding: 0 56px 0 52px;
+      font-size: 16px;
+      color: var(--text);
+      font-family: inherit;
+      outline: none;
+      transition: all 0.25s;
+      backdrop-filter: blur(8px);
+    }
+
+    [data-theme="latte"] .search-input {
+      background: rgba(204,208,218,0.6);
+      border-color: rgba(136,57,239,0.25);
+    }
+
+    .search-input::placeholder { color: var(--overlay); }
+    .search-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(203,166,247,0.15);
+      background: rgba(49,50,68,0.9);
+    }
+
+    [data-theme="latte"] .search-input:focus {
+      background: rgba(204,208,218,0.9);
+    }
+
+    .search-clear {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--overlay);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 6px;
+      display: none;
+      transition: color 0.2s;
+    }
+
+    .search-clear:hover { color: var(--text); }
+    .search-clear.visible { display: flex; align-items: center; }
+
+    /* SUGGESTIONS */
+    .suggestions {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0; right: 0;
+      background: var(--surface);
+      border: 1px solid rgba(203,166,247,0.18);
+      border-radius: 12px;
+      overflow: hidden;
+      z-index: 300;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+      display: none;
+    }
+
+    .suggestions.open { display: block; }
+
+    .sug-item {
+      padding: 10px 16px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: background 0.15s;
+    }
+
+    .sug-item:hover, .sug-item.focused { background: rgba(203,166,247,0.1); }
+
+    .sug-item svg { color: var(--overlay); flex-shrink: 0; }
+
+    /* ENGINE PILLS */
+    .engine-pills {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 32px;
+    }
+
+    .engine-pill {
+      padding: 4px 14px;
+      border-radius: 100px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1.5px solid rgba(203,166,247,0.2);
+      background: transparent;
+      color: var(--subtext);
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .engine-pill:hover { border-color: var(--accent); color: var(--accent); }
+    .engine-pill.active {
+      border-color: var(--accent);
+      background: rgba(203,166,247,0.15);
+      color: var(--accent);
+    }
+
+    /* QUICK LINKS */
+    .quick-links {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, 80px);
+      gap: 12px;
+      justify-content: center;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .ql-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 7px;
+      padding: 12px 8px;
+      border-radius: 12px;
+      border: 1.5px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: rgba(49,50,68,0.4);
+    }
+
+    .ql-item:hover {
+      border-color: rgba(203,166,247,0.25);
+      background: rgba(49,50,68,0.75);
+      transform: translateY(-2px);
+    }
+
+    .ql-icon {
+      width: 36px; height: 36px;
+      border-radius: 10px;
+      background: rgba(203,166,247,0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .ql-icon img { width: 22px; height: 22px; object-fit: contain; }
+
+    .ql-name {
+      font-size: 11px;
+      color: var(--subtext);
+      font-weight: 500;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 72px;
+    }
+
+    /* TABS PAGE */
+    #page-tabs {
+      flex-direction: column;
+    }
+
+    .tabs-header {
+      position: relative;
+      z-index: 10;
+      padding: 32px 32px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .tabs-header h1 {
+      font-size: 22px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .tab-add-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 20px;
+      background: rgba(203,166,247,0.15);
+      border: 1.5px solid rgba(203,166,247,0.3);
+      border-radius: 10px;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .tab-add-btn:hover {
+      background: rgba(203,166,247,0.25);
+    }
+
+    .tabs-grid {
+      position: relative;
+      z-index: 10;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+      padding: 16px 32px;
+    }
+
+    .tab-card {
+      background: rgba(49,50,68,0.5);
+      border: 1.5px solid rgba(203,166,247,0.12);
+      border-radius: 14px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .tab-card:hover { border-color: rgba(203,166,247,0.35); transform: translateY(-2px); }
+    .tab-card.active-tab { border-color: var(--accent); }
+
+    .tab-preview {
+      height: 120px;
+      background: rgba(24,24,37,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 32px;
+    }
+
+    .tab-info {
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .tab-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 140px;
+    }
+
+    .tab-close {
+      background: none;
+      border: none;
+      color: var(--overlay);
+      cursor: pointer;
+      padding: 2px;
+      border-radius: 4px;
+      transition: color 0.2s;
+      display: flex;
+    }
+
+    .tab-close:hover { color: var(--red); }
+
+    /* SETTINGS PAGE */
+    #page-settings {
+      flex-direction: column;
+    }
+
+    .settings-wrap {
+      position: relative;
+      z-index: 10;
+      max-width: 640px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+
+    .settings-title {
+      font-size: 22px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 28px;
+    }
+
+    .settings-section {
+      background: rgba(49,50,68,0.4);
+      border: 1px solid rgba(203,166,247,0.1);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+
+    [data-theme="latte"] .settings-section {
+      background: rgba(204,208,218,0.4);
+      border-color: rgba(136,57,239,0.12);
+    }
+
+    .settings-section h2 {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 16px;
+    }
+
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(203,166,247,0.06);
+    }
+
+    .setting-row:last-child { border-bottom: none; }
+
+    .setting-label {
+      font-size: 14px;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .setting-desc {
+      font-size: 12px;
+      color: var(--subtext);
+      margin-top: 2px;
+    }
+
+    .setting-control input[type="text"],
+    .setting-control select {
+      background: rgba(24,24,37,0.6);
+      border: 1.5px solid rgba(203,166,247,0.18);
+      border-radius: 8px;
+      padding: 7px 12px;
+      font-size: 13px;
+      color: var(--text);
+      font-family: inherit;
+      outline: none;
+      min-width: 160px;
+      transition: border-color 0.2s;
+    }
+
+    [data-theme="latte"] .setting-control input[type="text"],
+    [data-theme="latte"] .setting-control select {
+      background: rgba(204,208,218,0.6);
+    }
+
+    .setting-control input[type="text"]:focus,
+    .setting-control select:focus {
+      border-color: var(--accent);
+    }
+
+    /* TOGGLE */
+    .toggle {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .toggle input { opacity: 0; width: 0; height: 0; }
+
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      background: rgba(108,112,134,0.5);
+      border-radius: 100px;
+      cursor: pointer;
+      transition: background 0.25s;
+    }
+
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 18px; height: 18px;
+      left: 3px; top: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.25s;
+    }
+
+    .toggle input:checked + .toggle-slider { background: var(--accent); }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+    /* THEME SELECTOR */
+    .theme-swatches {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .theme-swatch {
+      width: 48px; height: 32px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .theme-swatch.active { border-color: var(--accent); transform: scale(1.1); }
+
+    .theme-swatch[data-t="mocha"] { background: linear-gradient(135deg, #1e1e2e 50%, #cba6f7 50%); }
+    .theme-swatch[data-t="macchiato"] { background: linear-gradient(135deg, #24273a 50%, #c6a0f6 50%); }
+    .theme-swatch[data-t="frappe"] { background: linear-gradient(135deg, #303446 50%, #ca9ee6 50%); }
+    .theme-swatch[data-t="latte"] { background: linear-gradient(135deg, #eff1f5 50%, #8839ef 50%); }
+
+    /* PROXY IFRAME */
+    #proxy-frame-container {
+      position: fixed;
+      inset: 0;
+      z-index: 999;
+      display: none;
+      flex-direction: column;
+      background: #000;
+    }
+
+    #proxy-frame-container.open { display: flex; }
+
+    #proxy-bar {
+      height: 40px;
+      background: rgba(24,24,37,0.95);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid rgba(203,166,247,0.15);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 12px;
+      flex-shrink: 0;
+    }
+
+    .proxy-url-display {
+      flex: 1;
+      background: rgba(49,50,68,0.6);
+      border: 1px solid rgba(203,166,247,0.15);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 12px;
+      color: var(--subtext);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .proxy-bar-btn {
+      background: none;
+      border: none;
+      color: var(--subtext);
+      cursor: pointer;
+      padding: 5px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      transition: all 0.2s;
+    }
+
+    .proxy-bar-btn:hover { background: rgba(203,166,247,0.12); color: var(--text); }
+    .proxy-bar-btn.close-btn:hover { color: var(--red); }
+
+    #proxy-iframe {
+      flex: 1;
+      border: none;
+      width: 100%;
+    }
+
+    /* SPLASH TEXT */
+    .splash-text {
+      font-size: 12px;
+      color: var(--subtext);
+      opacity: 0.7;
+      margin-bottom: 32px;
+      font-style: italic;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 480px) {
+      .void-title { font-size: 52px; letter-spacing: -2px; }
+      .search-input { font-size: 15px; }
+      .tabs-grid { grid-template-columns: 1fr 1fr; padding: 16px; }
+      .settings-wrap { padding: 24px 16px; }
+    }
+  </style>
+</head>
+<body data-theme="mocha">
+
+<canvas id="particles-canvas"></canvas>
+
+<nav>
+  <span class="nav-logo">FasahatHub</span>
+  <div class="nav-tabs">
+    <button class="nav-tab active" data-page="home">Home</button>
+    <button class="nav-tab" data-page="tabs">Tabs</button>
+    <button class="nav-tab" data-page="settings">Settings</button>
+  </div>
+  <div class="nav-right">
+    <button class="theme-btn" id="cycle-theme-btn" title="Cycle theme">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+    </button>
+  </div>
+</nav>
+
+<!-- HOME PAGE -->
+<div class="page active" id="page-home">
+  <div class="home-content">
+    <div class="void-title">FasahatHub</div>
+    <div id="splash-text" class="splash-text">loading...</div>
+
+    <div class="engine-pills" id="engine-pills">
+      <button class="engine-pill active" data-engine="google">Google</button>
+      <button class="engine-pill" data-engine="bing">Bing</button>
+      <button class="engine-pill" data-engine="ddg">DuckDuckGo</button>
+      <button class="engine-pill" data-engine="brave">Brave</button>
+    </div>
+
+    <div class="search-wrap">
+      <span class="search-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </span>
+      <input
+        id="search-input"
+        class="search-input"
+        type="text"
+        placeholder="Search freely..."
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <button class="search-clear" id="search-clear">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="suggestions" id="suggestions"></div>
+    </div>
+
+    <div class="quick-links" id="quick-links"></div>
+  </div>
+</div>
+
+<!-- TABS PAGE -->
+<div class="page" id="page-tabs">
+  <div class="tabs-header">
+    <h1>Open Tabs</h1>
+    <button class="tab-add-btn" id="tab-new-btn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New Tab
+    </button>
+  </div>
+  <div class="tabs-grid" id="tabs-grid"></div>
+</div>
+
+<!-- SETTINGS PAGE -->
+<div class="page" id="page-settings">
+  <div class="settings-wrap">
+    <div class="settings-title">Settings</div>
+
+    <div class="settings-section">
+      <h2>Appearance</h2>
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">Theme</div>
+          <div class="setting-desc">Catppuccin color palette</div>
+        </div>
+        <div class="theme-swatches" id="theme-swatches">
+          <div class="theme-swatch active" data-t="mocha" title="Mocha"></div>
+          <div class="theme-swatch" data-t="macchiato" title="Macchiato"></div>
+          <div class="theme-swatch" data-t="frappe" title="Frappe"></div>
+          <div class="theme-swatch" data-t="latte" title="Latte"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h2>Tab Cloaking</h2>
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">Enable Cloaking</div>
+          <div class="setting-desc">Change tab title and icon</div>
+        </div>
+        <div class="setting-control">
+          <label class="toggle">
+            <input type="checkbox" id="cloak-toggle" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+      <div class="setting-row" id="cloak-title-row">
+        <div>
+          <div class="setting-label">Tab Title</div>
+        </div>
+        <div class="setting-control">
+          <input type="text" id="cloak-title-input" placeholder="e.g. Canvas" maxlength="60" />
+        </div>
+      </div>
+      <div class="setting-row" id="cloak-icon-row">
+        <div>
+          <div class="setting-label">Icon URL</div>
+          <div class="setting-desc">favicon.ico URL</div>
+        </div>
+        <div class="setting-control">
+          <input type="text" id="cloak-icon-input" placeholder="https://example.com/favicon.ico" />
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h2>Proxy Behavior</h2>
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">About:Blank Mode</div>
+          <div class="setting-desc">Open proxy in a blank popup</div>
+        </div>
+        <div class="setting-control">
+          <label class="toggle">
+            <input type="checkbox" id="blank-toggle" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h2>Search</h2>
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">Default Engine</div>
+        </div>
+        <div class="setting-control">
+          <select id="engine-select">
+            <option value="google">Google</option>
+            <option value="bing">Bing</option>
+            <option value="ddg">DuckDuckGo</option>
+            <option value="brave">Brave</option>
+            <option value="yahoo">Yahoo</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <h2>Quick Links</h2>
+      <div class="setting-row">
+        <div>
+          <div class="setting-label">Reset Quick Links</div>
+          <div class="setting-desc">Restore default shortcuts</div>
+        </div>
+        <div class="setting-control">
+          <button onclick="resetQuickLinks()" style="padding:7px 14px;border-radius:8px;border:1.5px solid rgba(243,139,168,0.3);background:rgba(243,139,168,0.1);color:#f38ba8;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s;" onmouseover="this.style.background='rgba(243,139,168,0.2)'" onmouseout="this.style.background='rgba(243,139,168,0.1)'">Reset</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROXY FRAME -->
+<div id="proxy-frame-container">
+  <div id="proxy-bar">
+    <button class="proxy-bar-btn" id="proxy-back-btn" title="Back">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <button class="proxy-bar-btn" id="proxy-reload-btn" title="Reload">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+    </button>
+    <div class="proxy-url-display" id="proxy-url-display">about:blank</div>
+    <button class="proxy-bar-btn" id="proxy-blank-btn" title="Open in new blank window">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>
+    </button>
+    <button class="proxy-bar-btn close-btn" id="proxy-close-btn" title="Close">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <iframe id="proxy-iframe" src="about:blank" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-downloads allow-modals" allow="autoplay; fullscreen; pointer-lock; gamepad"></iframe>
+</div>
+
+<script>
+(function() {
+  // ─── SETTINGS ───────────────────────────────────────────────────────────────
+  const SK = {
+    theme: 'fh_theme',
+    engine: 'fh_engine',
+    cloak: 'fh_cloak_enabled',
+    cloakTitle: 'fh_cloak_title',
+    cloakIcon: 'fh_cloak_icon',
+    blank: 'fh_blank_mode',
+    quickLinks: 'fh_quick_links',
+    tabs: 'fh_tabs',
+  };
+
+  function ls(key, def) {
+    try { const v = localStorage.getItem(key); return v !== null ? JSON.parse(v) : def; } catch { return def; }
+  }
+  function ss(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
+
+  let settings = {
+    theme: ls(SK.theme, 'mocha'),
+    engine: ls(SK.engine, 'google'),
+    cloak: ls(SK.cloak, false),
+    cloakTitle: ls(SK.cloakTitle, ''),
+    cloakIcon: ls(SK.cloakIcon, ''),
+    blank: ls(SK.blank, false),
+  };
+
+  // ─── ENGINES ─────────────────────────────────────────────────────────────────
+  const ENGINES = {
+    google: q => `https://www.google.com/search?q=${encodeURIComponent(q)}`,
+    bing:   q => `https://www.bing.com/search?q=${encodeURIComponent(q)}`,
+    ddg:    q => `https://duckduckgo.com/?q=${encodeURIComponent(q)}`,
+    brave:  q => `https://search.brave.com/search?q=${encodeURIComponent(q)}`,
+    yahoo:  q => `https://search.yahoo.com/search?p=${encodeURIComponent(q)}`,
+  };
+
+  function getEngineUrl(q) {
+    return (ENGINES[settings.engine] || ENGINES.google)(q);
+  }
+
+  function isUrl(s) {
+    return /^(https?:\/\/|\/\/)/i.test(s) || /^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}(\/|$)/.test(s);
+  }
+
+  function toUrl(s) {
+    if (/^https?:\/\//i.test(s)) return s;
+    if (/^\/\//.test(s)) return 'https:' + s;
+    if (/^[a-zA-Z0-9-]+\.[a-zA-Z]{2,}/.test(s)) return 'https://' + s;
+    return s;
+  }
+
+  // ─── QUICK LINKS ─────────────────────────────────────────────────────────────
+  const DEFAULT_QL = [
+    { name: 'Google',    url: 'https://google.com',    icon: 'https://google.com/favicon.ico' },
+    { name: 'YouTube',   url: 'https://youtube.com',   icon: 'https://youtube.com/favicon.ico' },
+    { name: 'Gmail',     url: 'https://mail.google.com', icon: 'https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico' },
+    { name: 'Drive',     url: 'https://drive.google.com', icon: 'https://ssl.gstatic.com/docs/doclist/images/drive_2022q3_32dp.png' },
+    { name: 'GitHub',    url: 'https://github.com',    icon: 'https://github.com/favicon.ico' },
+    { name: 'Reddit',    url: 'https://reddit.com',    icon: 'https://www.redditstatic.com/desktop2x/img/favicon/favicon-32x32.png' },
+    { name: 'Twitter',   url: 'https://twitter.com',   icon: 'https://twitter.com/favicon.ico' },
+    { name: 'Discord',   url: 'https://discord.com',   icon: 'https://discord.com/assets/favicon.ico' },
+  ];
+
+  function getQuickLinks() { return ls(SK.quickLinks, DEFAULT_QL); }
+  window.resetQuickLinks = () => { ss(SK.quickLinks, DEFAULT_QL); renderQuickLinks(); };
+
+  function renderQuickLinks() {
+    const container = document.getElementById('quick-links');
+    const links = getQuickLinks();
+    container.innerHTML = '';
+    links.forEach(link => {
+      const el = document.createElement('div');
+      el.className = 'ql-item';
+      el.innerHTML = `
+        <div class="ql-icon">
+          <img src="${link.icon}" alt="" onerror="this.style.display='none';this.parentNode.innerHTML='<svg width=\'18\' height=\'18\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'><circle cx=\'12\' cy=\'12\' r=\'10\'/><line x1=\'2\' y1=\'12\' x2=\'22\' y2=\'12\'/><path d=\'M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z\'/></svg>'" />
+        </div>
+        <div class="ql-name">${link.name}</div>
+      `;
+      el.addEventListener('click', () => navigate(link.url));
+      container.appendChild(el);
+    });
+  }
+
+  // ─── NAVIGATION / PROXY ──────────────────────────────────────────────────────
+  let currentUrl = '';
+
+  function navigate(url) {
+    url = toUrl(url);
+    currentUrl = url;
+
+    if (settings.blank) {
+      openBlank(url);
+      return;
+    }
+
+    const container = document.getElementById('proxy-frame-container');
+    const iframe = document.getElementById('proxy-iframe');
+    const display = document.getElementById('proxy-url-display');
+    const pxUrl = '/px?url=' + encodeURIComponent(url);
+    iframe.src = pxUrl;
+    display.textContent = url;
+    container.classList.add('open');
+  }
+
+  function openBlank(url) {
+    const pxUrl = '/px?url=' + encodeURIComponent(url);
+    const w = window.open('', '_blank');
+    if (!w) { alert('Pop-up blocked. Allow pop-ups for this site.'); return; }
+    const d = w.document;
+    d.open();
+    d.write(`<!DOCTYPE html><html><head><title>FasahatHub</title></head><body style="margin:0;overflow:hidden;background:#000"><iframe src="${pxUrl}" style="width:100vw;height:100vh;border:none;position:fixed;top:0;left:0" sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-downloads" allow="autoplay;fullscreen;pointer-lock;gamepad"></iframe></body></html>`);
+    d.close();
+  }
+
+  function submitSearch() {
+    const q = document.getElementById('search-input').value.trim();
+    if (!q) return;
+    const target = isUrl(q) ? toUrl(q) : getEngineUrl(q);
+    navigate(target);
+  }
+
+  // ─── SEARCH & SUGGESTIONS ────────────────────────────────────────────────────
+  let sugTimer = null;
+  let sugFocused = -1;
+  let lastSugs = [];
+
+  function showSuggestions(items) {
+    lastSugs = items;
+    const box = document.getElementById('suggestions');
+    box.innerHTML = '';
+    if (!items.length) { box.classList.remove('open'); return; }
+    items.forEach((text, i) => {
+      const el = document.createElement('div');
+      el.className = 'sug-item';
+      el.dataset.i = i;
+      el.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>${text}`;
+      el.addEventListener('click', () => {
+        document.getElementById('search-input').value = text;
+        box.classList.remove('open');
+        submitSearch();
+      });
+      box.appendChild(el);
+    });
+    box.classList.add('open');
+    sugFocused = -1;
+  }
+
+  function hideSuggestions() {
+    document.getElementById('suggestions').classList.remove('open');
+    sugFocused = -1;
+  }
+
+  function fetchSuggestions(q) {
+    if (!q.trim()) { hideSuggestions(); return; }
+    const cbName = '__voidSug_' + Date.now();
+    const s = document.createElement('script');
+    s.src = `https://suggestqueries.google.com/complete/search?client=firefox&q=${encodeURIComponent(q)}&callback=${cbName}`;
+    window[cbName] = (data) => {
+      delete window[cbName];
+      s.remove();
+      showSuggestions((data[1] || []).slice(0, 6));
+    };
+    s.onerror = () => { delete window[cbName]; s.remove(); };
+    document.head.appendChild(s);
+  }
+
+  const searchInput = document.getElementById('search-input');
+  const searchClear = document.getElementById('search-clear');
+
+  searchInput.addEventListener('input', e => {
+    const v = e.target.value;
+    searchClear.classList.toggle('visible', v.length > 0);
+    clearTimeout(sugTimer);
+    sugTimer = setTimeout(() => fetchSuggestions(v), 200);
+  });
+
+  searchInput.addEventListener('keydown', e => {
+    const box = document.getElementById('suggestions');
+    const items = box.querySelectorAll('.sug-item');
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      sugFocused = Math.min(sugFocused + 1, items.length - 1);
+      items.forEach((el, i) => el.classList.toggle('focused', i === sugFocused));
+      if (sugFocused >= 0) searchInput.value = lastSugs[sugFocused];
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      sugFocused = Math.max(sugFocused - 1, -1);
+      items.forEach((el, i) => el.classList.toggle('focused', i === sugFocused));
+      if (sugFocused >= 0) searchInput.value = lastSugs[sugFocused];
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      hideSuggestions();
+      submitSearch();
+    } else if (e.key === 'Escape') {
+      hideSuggestions();
+    }
+  });
+
+  searchClear.addEventListener('click', () => {
+    searchInput.value = '';
+    searchClear.classList.remove('visible');
+    hideSuggestions();
+    searchInput.focus();
+  });
+
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.search-wrap')) hideSuggestions();
+  });
+
+  // ─── ENGINE PILLS ─────────────────────────────────────────────────────────────
+  document.getElementById('engine-pills').addEventListener('click', e => {
+    const btn = e.target.closest('.engine-pill');
+    if (!btn) return;
+    settings.engine = btn.dataset.engine;
+    ss(SK.engine, settings.engine);
+    document.querySelectorAll('.engine-pill').forEach(p => p.classList.toggle('active', p.dataset.engine === settings.engine));
+    document.getElementById('engine-select').value = settings.engine;
+  });
+
+  function syncEnginePills() {
+    document.querySelectorAll('.engine-pill').forEach(p => p.classList.toggle('active', p.dataset.engine === settings.engine));
+  }
+
+  // ─── PROXY BAR ────────────────────────────────────────────────────────────────
+  document.getElementById('proxy-close-btn').addEventListener('click', () => {
+    const container = document.getElementById('proxy-frame-container');
+    const iframe = document.getElementById('proxy-iframe');
+    iframe.src = 'about:blank';
+    container.classList.remove('open');
+    applyCloak();
+  });
+
+  document.getElementById('proxy-reload-btn').addEventListener('click', () => {
+    const iframe = document.getElementById('proxy-iframe');
+    iframe.src = iframe.src;
+  });
+
+  document.getElementById('proxy-back-btn').addEventListener('click', () => {
+    try { document.getElementById('proxy-iframe').contentWindow.history.back(); } catch {}
+  });
+
+  document.getElementById('proxy-blank-btn').addEventListener('click', () => {
+    if (currentUrl) openBlank(currentUrl);
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      const container = document.getElementById('proxy-frame-container');
+      if (container.classList.contains('open')) {
+        document.getElementById('proxy-iframe').src = 'about:blank';
+        container.classList.remove('open');
+        applyCloak();
+      }
+    }
+  });
+
+  // ─── TAB MANAGEMENT ───────────────────────────────────────────────────────────
+  let tabs = ls(SK.tabs, []);
+
+  function saveTabs() { ss(SK.tabs, tabs); }
+
+  function renderTabs() {
+    const grid = document.getElementById('tabs-grid');
+    grid.innerHTML = '';
+    if (!tabs.length) {
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--subtext);opacity:0.5"><div style="font-size:32px;margin-bottom:12px">🌌</div><div style="font-size:14px">No tabs open</div></div>';
+      return;
+    }
+    tabs.forEach((tab, i) => {
+      const card = document.createElement('div');
+      card.className = 'tab-card';
+      const domain = (() => { try { return new URL(tab.url).hostname; } catch { return tab.url; } })();
+      card.innerHTML = `
+        <div class="tab-preview">
+          <img src="https://${domain}/favicon.ico" style="width:36px;height:36px;object-fit:contain" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
+          <span style="display:none;font-size:28px">🌐</span>
+        </div>
+        <div class="tab-info">
+          <div class="tab-title">${tab.title || domain}</div>
+          <button class="tab-close" data-i="${i}" title="Close tab">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      `;
+      card.querySelector('.tab-close').addEventListener('click', e => {
+        e.stopPropagation();
+        tabs.splice(i, 1);
+        saveTabs();
+        renderTabs();
+      });
+      card.addEventListener('click', () => navigate(tab.url));
+      grid.appendChild(card);
+    });
+  }
+
+  document.getElementById('tab-new-btn').addEventListener('click', () => {
+    const url = prompt('Enter URL:');
+    if (!url) return;
+    const fullUrl = toUrl(url.trim());
+    const domain = (() => { try { return new URL(fullUrl).hostname; } catch { return fullUrl; } })();
+    tabs.push({ url: fullUrl, title: domain });
+    saveTabs();
+    renderTabs();
+    navigate(fullUrl);
+  });
+
+  // ─── NAVIGATION ───────────────────────────────────────────────────────────────
+  const pages = { home: 'page-home', tabs: 'page-tabs', settings: 'page-settings' };
+
+  document.querySelectorAll('.nav-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const pageId = pages[btn.dataset.page];
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+      if (btn.dataset.page === 'tabs') renderTabs();
+    });
+  });
+
+  // ─── THEME ───────────────────────────────────────────────────────────────────
+  const THEMES = ['mocha', 'macchiato', 'frappe', 'latte'];
+
+  function applyTheme(t) {
+    document.body.dataset.theme = t;
+    settings.theme = t;
+    ss(SK.theme, t);
+    document.querySelectorAll('.theme-swatch').forEach(s => s.classList.toggle('active', s.dataset.t === t));
+  }
+
+  document.getElementById('theme-swatches').addEventListener('click', e => {
+    const swatch = e.target.closest('.theme-swatch');
+    if (swatch) applyTheme(swatch.dataset.t);
+  });
+
+  document.getElementById('cycle-theme-btn').addEventListener('click', () => {
+    const idx = THEMES.indexOf(settings.theme);
+    applyTheme(THEMES[(idx + 1) % THEMES.length]);
+  });
+
+  // ─── SETTINGS UI ─────────────────────────────────────────────────────────────
+  const cloakToggle = document.getElementById('cloak-toggle');
+  const cloakTitleInput = document.getElementById('cloak-title-input');
+  const cloakIconInput = document.getElementById('cloak-icon-input');
+  const blankToggle = document.getElementById('blank-toggle');
+  const engineSelect = document.getElementById('engine-select');
+
+  cloakToggle.addEventListener('change', () => {
+    settings.cloak = cloakToggle.checked;
+    ss(SK.cloak, settings.cloak);
+    applyCloak();
+  });
+
+  cloakTitleInput.addEventListener('input', () => {
+    settings.cloakTitle = cloakTitleInput.value;
+    ss(SK.cloakTitle, settings.cloakTitle);
+    applyCloak();
+  });
+
+  cloakIconInput.addEventListener('input', () => {
+    settings.cloakIcon = cloakIconInput.value;
+    ss(SK.cloakIcon, settings.cloakIcon);
+    applyCloak();
+  });
+
+  blankToggle.addEventListener('change', () => {
+    settings.blank = blankToggle.checked;
+    ss(SK.blank, settings.blank);
+  });
+
+  engineSelect.addEventListener('change', () => {
+    settings.engine = engineSelect.value;
+    ss(SK.engine, settings.engine);
+    syncEnginePills();
+  });
+
+  function applyCloak() {
+    if (settings.cloak && settings.cloakTitle) {
+      document.title = settings.cloakTitle;
+    } else {
+      document.title = 'FasahatHub';
+    }
+    let link = document.querySelector("link[rel~='icon']");
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'icon';
+      document.head.appendChild(link);
+    }
+    if (settings.cloak && settings.cloakIcon) {
+      link.href = settings.cloakIcon;
+    } else {
+      link.href = '/favicon.svg';
+    }
+  }
+
+  function loadSettingsUI() {
+    cloakToggle.checked = settings.cloak;
+    cloakTitleInput.value = settings.cloakTitle;
+    cloakIconInput.value = settings.cloakIcon;
+    blankToggle.checked = settings.blank;
+    engineSelect.value = settings.engine;
+    applyTheme(settings.theme);
+    syncEnginePills();
+    applyCloak();
+  }
+
+  // ─── PARTICLES ───────────────────────────────────────────────────────────────
+  (function initParticles() {
+    const canvas = document.getElementById('particles-canvas');
+    const ctx = canvas.getContext('2d');
+
+    let W, H, particles = [];
+    const COUNT = 50;
+
+    function resize() {
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+    }
+
+    function Particle() {
+      this.x = Math.random() * W;
+      this.y = Math.random() * H;
+      this.r = Math.random() * 1.5 + 0.5;
+      this.vx = (Math.random() - 0.5) * 0.4;
+      this.vy = (Math.random() - 0.5) * 0.4;
+      this.a = Math.random() * 0.6 + 0.1;
+    }
+
+    function getParticleColor() {
+      const t = document.body.dataset.theme;
+      if (t === 'latte') return [136, 57, 239];
+      if (t === 'frappe') return [202, 158, 230];
+      if (t === 'macchiato') return [198, 160, 246];
+      return [203, 166, 247]; // mocha
+    }
+
+    function init() {
+      particles = [];
+      for (let i = 0; i < COUNT; i++) particles.push(new Particle());
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      const [r, g, b] = getParticleColor();
+      particles.forEach(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < 0) p.x = W;
+        if (p.x > W) p.x = 0;
+        if (p.y < 0) p.y = H;
+        if (p.y > H) p.y = 0;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${r},${g},${b},${p.a})`;
+        ctx.fill();
+      });
+      // Draw connections
+      for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+          const dx = particles[i].x - particles[j].x;
+          const dy = particles[i].y - particles[j].y;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if (dist < 120) {
+            const alpha = (1 - dist / 120) * 0.15;
+            ctx.beginPath();
+            ctx.moveTo(particles[i].x, particles[i].y);
+            ctx.lineTo(particles[j].x, particles[j].y);
+            ctx.strokeStyle = `rgba(${r},${g},${b},${alpha})`;
+            ctx.lineWidth = 0.8;
+            ctx.stroke();
+          }
+        }
+      }
+      requestAnimationFrame(draw);
+    }
+
+    window.addEventListener('resize', () => { resize(); init(); });
+    resize();
+    init();
+    draw();
+  })();
+
+  // ─── SPLASH TEXTS ─────────────────────────────────────────────────────────────
+  const SPLASHES = [
+    'by Fasahat',
+    'procrastinate responsibly',
+    'not a school computer, trust me',
+    'the proxy you always wanted',
+    'built different',
+    'do homework. just kidding.',
+    'infinite tabs, infinite power',
+    'ctrl+w who?',
+    'escape the algorithm',
+    'your digital safe space',
+    'FasahatHub guarantees nothing',
+    'faster than your wifi',
+    'catppuccin supremacy',
+    'no pixels were harmed',
+    'welcome to FasahatHub',
+  ];
+
+  document.getElementById('splash-text').textContent = SPLASHES[Math.floor(Math.random() * SPLASHES.length)];
+
+  // ─── INIT ─────────────────────────────────────────────────────────────────────
+  renderQuickLinks();
+  loadSettingsUI();
+
+  // Auto-navigate from ?q= URL param (used by FasahatHub navbar proxy bar)
+  (function() {
+    const q = new URLSearchParams(location.search).get('q');
+    if (q) setTimeout(() => {
+      const inp = document.getElementById('search-input');
+      if (inp) { inp.value = q; submitSearch(); }
+    }, 500);
+  })();
+})();
+</script>
+</body>
+</html>
