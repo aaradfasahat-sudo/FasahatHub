@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FasahatHub Proxy</title>
+  <style>
+    body { margin: 0; min-height: 100vh; background: #01050d; color: #f7f9fc; font-family: Inter, system-ui, sans-serif; display: flex; align-items: center; justify-content: center; text-align: center; padding: 24px; }
+    a { color: #5be3ff; text-decoration: none; }
+    .message { max-width: 720px; }
+    .error { color: #ff5874; }
+    iframe { width: 100vw; height: 100vh; border: none; margin: 0; }
+  </style>
+</head>
+<body>
+  <div class="message" id="message">Loading…</div>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const encoded = params.get('url');
+    if (!encoded) {
+      document.getElementById('message').innerHTML = '<h1 class="error">No URL provided.</h1><p>Go back to <a href="./">Proxy home</a> and try again.</p>';
+    } else {
+      try {
+        const target = decodeURIComponent(encoded);
+        const url = new URL(target);
+        const safeUrl = url.href;
+        if (window.top !== window.self) {
+          const iframe = document.createElement('iframe');
+          iframe.src = safeUrl;
+          iframe.sandbox = 'allow-scripts allow-same-origin allow-forms allow-popups allow-pointer-lock allow-downloads';
+          iframe.allow = 'autoplay; fullscreen; pointer-lock; gamepad';
+          document.body.innerHTML = '';
+          document.body.appendChild(iframe);
+        } else {
+          window.location.replace(safeUrl);
+        }
+      } catch (error) {
+        document.getElementById('message').innerHTML = '<h1 class="error">Invalid URL.</h1><p>Return to <a href="./">Proxy home</a> and enter a valid link.</p>';
+      }
+    }
+  </script>
+</body>
+</html>

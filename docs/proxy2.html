@@ -970,14 +970,14 @@
     const container = document.getElementById('proxy-frame-container');
     const iframe = document.getElementById('proxy-iframe');
     const display = document.getElementById('proxy-url-display');
-    const pxUrl = '/px?url=' + encodeURIComponent(url);
+    const pxUrl = './px?url=' + encodeURIComponent(url);
     iframe.src = pxUrl;
     display.textContent = url;
     container.classList.add('open');
   }
 
   function openBlank(url) {
-    const pxUrl = '/px?url=' + encodeURIComponent(url);
+    const pxUrl = './px?url=' + encodeURIComponent(url);
     const w = window.open('', '_blank');
     if (!w) { alert('Pop-up blocked. Allow pop-ups for this site.'); return; }
     const d = w.document;

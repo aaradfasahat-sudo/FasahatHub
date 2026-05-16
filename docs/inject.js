@@ -446,13 +446,14 @@
   function renderProxy(el) {
     el.innerHTML = `
       <div style="font-size:10px;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px;">Web Proxy</div>
-      <a href="/proxy" target="_blank" style="display:flex;align-items:center;gap:10px;background:rgba(229,57,53,0.12);border:1px solid rgba(229,57,53,0.3);border-radius:10px;padding:14px 16px;color:#e8e9f0;text-decoration:none;font-weight:600;font-size:13px;transition:background 0.15s;" onmouseover="this.style.background='rgba(229,57,53,0.22)'" onmouseout="this.style.background='rgba(229,57,53,0.12)'">
+      <a href="proxy.html" target="_blank" style="display:flex;align-items:center;gap:10px;background:rgba(229,57,53,0.12);border:1px solid rgba(229,57,53,0.3);border-radius:10px;padding:14px 16px;color:#e8e9f0;text-decoration:none;font-weight:600;font-size:13px;transition:background 0.15s;" onmouseover="this.style.background='rgba(229,57,53,0.22)'" onmouseout="this.style.background='rgba(229,57,53,0.12)'">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#e53935" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
         Open Proxy Hub
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2" style="margin-left:auto"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="2" style="margin-left:auto"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/></svg>
       </a>
       <div style="margin-top:10px;font-size:11px;color:rgba(255,255,255,.3);line-height:1.5;">Both FasahatHub proxies available inside. Use About:Blank mode in proxy settings for stealth browsing.</div>
     `;
+  }
   }
 
   /* ---- Activity Feed (from DM contacts) ---- */
@@ -2818,7 +2819,7 @@
     if (ui) ui.value = url;
     if (lb) { lb.style.width = '30%'; }
 
-    const proxySrc = '/px?url=' + encodeURIComponent(url);
+    const proxySrc = './px?url=' + encodeURIComponent(url);
     fr.src = proxySrc;
     ov._currentProxySrc = proxySrc;  // track for reliable reload
     ov.style.display = 'flex';

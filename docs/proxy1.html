@@ -789,14 +789,14 @@
   function openProxy(url) {
     const frame = document.getElementById('proxy-frame');
     const closeBtn = document.getElementById('close-proxy');
-    frame.src = '/px?url=' + encodeURIComponent(url);
+    frame.src = './px?url=' + encodeURIComponent(url);
     frame.classList.add('active');
     closeBtn.classList.add('active');
     document.body.style.overflow = 'hidden';
   }
 
   function openAboutBlank(url) {
-    const pxUrl = '/px?url=' + encodeURIComponent(url);
+    const pxUrl = './px?url=' + encodeURIComponent(url);
     const w = window.open('about:blank', '_blank');
     if (!w) { openProxy(url); return; }
     const d = w.document;
